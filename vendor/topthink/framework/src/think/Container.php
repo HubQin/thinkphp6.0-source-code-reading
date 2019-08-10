@@ -456,6 +456,7 @@ class Container implements ContainerInterface, ArrayAccess, IteratorAggregate, C
      */
     protected function bindParams($reflect, array $vars = []): array
     {
+        //如果参数个数为0，直接返回
         if ($reflect->getNumberOfParameters() == 0) {
             return [];
         }
@@ -463,6 +464,7 @@ class Container implements ContainerInterface, ArrayAccess, IteratorAggregate, C
         // 判断数组类型 数字数组时按顺序绑定参数
         reset($vars);
         $type   = key($vars) === 0 ? 1 : 0;
+        //通过反射获取函数的参数，比如，获取Http类构造函数的参数，为「App $app」
         $params = $reflect->getParameters();
         $args   = [];
 
@@ -470,8 +472,10 @@ class Container implements ContainerInterface, ArrayAccess, IteratorAggregate, C
             $name      = $param->getName();
             $lowerName = self::parseName($name);
             $class     = $param->getClass();
-
+            
+            //如果参数是一个类
             if ($class) {
+                //将类型提示的参数实例化
                 $args[] = $this->getObjectParam($class->getName(), $vars);
             } elseif (1 == $type && !empty($vars)) {
                 $args[] = array_shift($vars);
@@ -560,6 +564,7 @@ class Container implements ContainerInterface, ArrayAccess, IteratorAggregate, C
             $result = $value;
             array_shift($vars);
         } else {
+            //实例化传入的类
             $result = $this->make($className);
         }
 
