@@ -63,8 +63,10 @@ class Config
      */
     public function load(string $file, string $name = ''): array
     {
+        // 如果是完整的文件路径
         if (is_file($file)) {
             $filename = $file;
+            
         } elseif (is_file($this->path . $file . $this->ext)) {
             $filename = $this->path . $file . $this->ext;
         }
@@ -85,6 +87,7 @@ class Config
      */
     protected function parse(string $file, string $name): array
     {
+        //文件后缀
         $type = pathinfo($file, PATHINFO_EXTENSION);
 
         switch ($type) {

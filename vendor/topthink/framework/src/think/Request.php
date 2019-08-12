@@ -318,15 +318,25 @@ class Request
     public function __construct()
     {
         // 保存 php://input
+        //参考资料：https://stackoverflow.com/questions/2731297/file-get-contentsphp-input-or-http-raw-post-data-which-one-is-better-to/2731338#2731338
+        //http://www.nowamagic.net/academy/detail/12220520
+        //php://input用于读取POST数据（可用于Coentent-Type取值为application/x-www-data-urlencoded、text/josn、text/xml，不能用于multipart/form-data类型）
+        //用$_POST的话，仅在Coentent-Type取值为application/x-www-data-urlencoded和multipart/form-data两种情况下有用
         $this->input = file_get_contents('php://input');
     }
 
     public static function __make(App $app)
     {
+        //实例化自身
         $request = new static();
 
+        // 保存超全局变量$_SERVER
+        // 参考https://www.php.net/manual/zh/reserved.variables.server.php
         $request->server  = $_SERVER;
+
+        // 跟前面的Http的实例化原理一样，实例化Env类并保存
         $request->env     = $app->env;
+
         $request->get     = $_GET;
         $request->post    = $_POST ?: $request->getInputData($request->input);
         $request->put     = $request->getInputData($request->input);
@@ -334,6 +344,8 @@ class Request
         $request->cookie  = $_COOKIE;
         $request->file    = $_FILES ?? [];
 
+        // 如果存在方法apache_request_headers则执行之
+        // apache_request_headers的作用是获取所有HTTP请求头
         if (function_exists('apache_request_headers') && $result = apache_request_headers()) {
             $header = $result;
         } else {
@@ -353,8 +365,9 @@ class Request
             }
         }
 
+        //将数组的中所有KEY转为小写
         $request->header = array_change_key_case($header);
-
+        //__make()方法最终返回Request类的实例
         return $request;
     }
 
@@ -1000,6 +1013,9 @@ class Request
 
     protected function getInputData($content): array
     {
+        //参考：https://www.jianshu.com/p/2359ff7d1800
+        //通过isJson()方法通过Accept和Content-type headers来判断请求发送的数据类型
+        //这里判断是否是json格式，是的话就解析之
         if ($this->isJson()) {
             return (array) json_decode($content, true);
         } elseif (strpos($content, '=')) {

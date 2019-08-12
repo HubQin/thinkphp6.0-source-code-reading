@@ -79,15 +79,18 @@ class Event
      */
     public function listenEvents(array $events)
     {
+        // 如果关闭了事件响应，直接返回不绑定
         if (!$this->withEvent) {
             return $this;
         }
 
+        //「$events」是事件标识到监听器的映射
         foreach ($events as $event => $listeners) {
+            // 从事件标识中解析出实际的事件
             if (isset($this->bind[$event])) {
                 $event = $this->bind[$event];
             }
-
+            // 合并到监听者（观察者）数组
             $this->listener[$event] = array_merge($this->listener[$event] ?? [], $listeners);
         }
 

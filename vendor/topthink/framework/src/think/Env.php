@@ -39,6 +39,7 @@ class Env implements ArrayAccess
      */
     public function load(string $file): void
     {
+        // 比如：D:\dev\tp6\.env
         $env = parse_ini_file($file, true) ?: [];
         $this->set($env);
     }
@@ -96,9 +97,11 @@ class Env implements ArrayAccess
     public function set($env, $value = null): void
     {
         if (is_array($env)) {
+            //全部KEY转为大写字母
             $env = array_change_key_case($env, CASE_UPPER);
 
             foreach ($env as $key => $val) {
+                //有二级配置的，转为KEY1_KEY2 => $v 的形式
                 if (is_array($val)) {
                     foreach ($val as $k => $v) {
                         $this->data[$key . '_' . strtoupper($k)] = $v;
@@ -107,6 +110,7 @@ class Env implements ArrayAccess
                     $this->data[$key] = $val;
                 }
             }
+            //ENV的值不是数组的情况
         } else {
             $name = strtoupper(str_replace('.', '_', $env));
 

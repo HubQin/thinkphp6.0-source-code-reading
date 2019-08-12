@@ -140,6 +140,7 @@ class Http
     {
         //自动创建request对象
         $request = $request ?? $this->app->make('request', [], true);
+        // 将Request类的实例保存到「$instances」数组
         $this->app->instance('request', $request);
 
         try {
@@ -158,6 +159,7 @@ class Http
      */
     protected function initialize()
     {
+        //如果还未初始化，则初始化之
         if (!$this->app->initialized()) {
             $this->app->initialize();
         }

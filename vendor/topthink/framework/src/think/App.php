@@ -170,7 +170,7 @@ class App extends Container
         
         //将当前容器实例保存到成员变量「$instance」中，也就是容器自己保存自己的一个实例
         static::setInstance($this);
-
+        //保存绑定的实例到「$instances」数组中
         $this->instance('app', $this);
         $this->instance('think\Container', $this);
     }
@@ -402,16 +402,21 @@ class App extends Container
     {
         $this->initialized = true;
 
+        //记录开始时间
         $this->beginTime = microtime(true);
+        //记录起始内存使用量
         $this->beginMem  = memory_get_usage();
 
         // 加载环境变量
+        // $this->env跟前面的(new App())->http和$this->config都是同样的套路
         if (is_file($this->rootPath . '.env')) {
             $this->env->load($this->rootPath . '.env');
         }
-
+        //设置配置文件后缀
+        //这里有个问题是，每次调用$this->env，都会重新实例化一次，
+        //环境变量会改变，可能这种每次实例化是必要的
         $this->configExt = $this->env->get('config_ext', '.php');
-
+        //设置调试模式
         $this->debugModeInit();
 
         // 加载全局初始化文件
@@ -419,15 +424,20 @@ class App extends Container
 
         // 加载框架默认语言包
         $langSet = $this->lang->defaultLangSet();
-
+        // 框架目录下对应的语言包
+        // 比如：D:\dev\tp6\vendor\topthink\framework\src\lang\zh-cn.php
         $this->lang->load($this->thinkPath . 'lang' . DIRECTORY_SEPARATOR . $langSet . '.php');
 
         // 加载应用默认语言包
+        // 这个会扫描「app/lang」里面，对应语言包文件夹的所有「.php」文件
+        // 比如，app/lang/zh-cn/* 下的所有文件
+        // 然后加载解析
         $this->loadLangPack($langSet);
 
         // 监听AppInit
         $this->event->trigger('AppInit');
 
+        // 设置时区
         date_default_timezone_set($this->config->get('app.default_timezone', 'Asia/Shanghai'));
 
         // 初始化
@@ -490,29 +500,43 @@ class App extends Container
     protected function load(): void
     {
         $appPath = $this->getAppPath();
-
+        
+        // 加载「app」目录下的「common.php」文件
         if (is_file($appPath . 'common.php')) {
             include_once $appPath . 'common.php';
         }
-
+        // 加载核心目录下的「helper.php」文件
+        // 可以看到，这里的加载顺序：先「common.php」，后「helper.php」
+        // 且「helper.php」中的函数包括在「if (!function_exists('abort'))」下
+        // 所以可以在「common.php」文件中覆盖系统定义的助手函数
         include_once $this->thinkPath . 'helper.php';
 
         $configPath = $this->getConfigPath();
 
         $files = [];
-
+        
+        // glob的作用是扫描给定路径模式下的文件，非常好用
+        // 这里扫描「config」目录下的所有「.php」文件
         if (is_dir($configPath)) {
             $files = glob($configPath . '*' . $this->configExt);
         }
 
         foreach ($files as $file) {
+            // $this->config 还是同样的套路获得了「Config」类的实例
+            // 「load」的第二个参数为一级配置名，这里传入一个文件名，所有文件名作为一级配置
+            // 比如「app.php」配置文件，一级配置为「app」
+            // 在 「Config」类作用域下的操作：
+            // 「load」加载文件后，通过「parse」方法解析文件内容
+            // 最后，通过「set」方法将所有配置合并了「config」成员变量
             $this->config->load($file, pathinfo($file, PATHINFO_FILENAME));
         }
-
+        
+        // 加载「app」目录下的「event.php」文件
         if (is_file($appPath . 'event.php')) {
             $this->loadEvent(include $appPath . 'event.php');
         }
-
+        // 「app」目录下暂时没有「service.php」文件
+        // 官方文件语焉不详，后面再慢慢研究了
         if (is_file($appPath . 'service.php')) {
             $services = include $appPath . 'service.php';
             foreach ($services as $service) {
@@ -529,18 +553,33 @@ class App extends Container
     protected function debugModeInit(): void
     {
         // 应用调试模式
+        // 「$appDebug」默认为false
+        // 沒有发现别的地方修改了「$appDebug」，程序好像永远关闭调试模式
+        // 这应该是一个Bug
+        // 正确的做法应该是先从Env类获取「app_debug」的值来判断是否是调试模式
         if (!$this->appDebug) {
             $this->appDebug = $this->env->get('app_debug') ? true : false;
+            // 关闭错误显示
             ini_set('display_errors', 'Off');
         }
-
+        // 如果不是命令行模式
         if (!$this->runningInConsole()) {
             //重新申请一块比较大的buffer
+            // php缓冲控制
+            // 参考：https://www.php.net/manual/en/ref.outcontrol.php
+            // https://www.cnblogs.com/saw2012/archive/2013/01/30/2882451.html
+            // 新版PHP默认开启缓冲区ob_start()，ob_get_level() == 1
             if (ob_get_level() > 0) {
+                //相当于ob_get_contents() 和 ob_clean()
+                // 获取缓冲区内容并删除缓冲区内容
                 $output = ob_get_clean();
             }
+            // 开启新的缓冲区控制
             ob_start();
             if (!empty($output)) {
+                // 由于开启了新的缓冲区控制，
+                // 这里不会直接输出$output
+                // 而是等到依次执行了ob_flush()和flash()之后才将内容输出到浏览器
                 echo $output;
             }
         }
@@ -555,14 +594,23 @@ class App extends Container
     public function loadEvent(array $event): void
     {
         if (isset($event['bind'])) {
+            // 老方法，简单实用，实例化「Event」类，然后调用它的「bind」方法
+            // 将事件标识到事件（操作，比如一个控制器操作）的映射合并到「Event」类「$bing」成员变量中
+            // 比如 'UserLogin' => 'app\event\UserLogin',
             $this->event->bind($event['bind']);
         }
 
         if (isset($event['listen'])) {
+            // 合并所有观察者（监听者）到Event类的listener数组
+            // 其形式为实际事件（被观察者）到观察者的映射
             $this->event->listenEvents($event['listen']);
         }
 
         if (isset($event['subscribe'])) {
+            // 订阅，实际上是一个批量的监听
+            // 就像一个人可以订阅多份报纸
+            // 一个订阅器，里面可以实现多个事件的监听
+            // 比如，我在一个订阅器中，同时监听用户登录，用户退出等操作
             $this->event->subscribe($event['subscribe']);
         }
     }
