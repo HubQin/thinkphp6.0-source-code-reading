@@ -35,9 +35,13 @@ class Error
     public function init(App $app)
     {
         $this->app = $app;
+        //开启所有级别错误提示
         error_reporting(E_ALL);
+        //设置自定义的函数处理运行中的错误
         set_error_handler([$this, 'appError']);
+        //设置默认的异常处理程序，用于没有用 try/catch 块来捕获的异常
         set_exception_handler([$this, 'appException']);
+        //注册一个 callback ，它会在脚本执行完成或者 exit() 后被调用。
         register_shutdown_function([$this, 'appShutdown']);
     }
 

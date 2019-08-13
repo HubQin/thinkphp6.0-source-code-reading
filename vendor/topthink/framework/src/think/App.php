@@ -441,6 +441,7 @@ class App extends Container
         date_default_timezone_set($this->config->get('app.default_timezone', 'Asia/Shanghai'));
 
         // 初始化
+        // 初始化错误和异常处理、注册系统服务和初始化系统服务
         foreach ($this->initializers as $initializer) {
             $this->make($initializer)->init($this);
         }
@@ -535,8 +536,7 @@ class App extends Container
         if (is_file($appPath . 'event.php')) {
             $this->loadEvent(include $appPath . 'event.php');
         }
-        // 「app」目录下暂时没有「service.php」文件
-        // 官方文件语焉不详，后面再慢慢研究了
+        // 注册自定义的服务
         if (is_file($appPath . 'service.php')) {
             $services = include $appPath . 'service.php';
             foreach ($services as $service) {
