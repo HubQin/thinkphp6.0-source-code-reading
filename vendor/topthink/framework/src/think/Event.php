@@ -241,20 +241,23 @@ class Event
         if (!$this->withEvent) {
             return;
         }
-
+        // 如果是一个对象，解析出对象的类
         if (is_object($event)) {
+            //将对象实例作为传入参数
             $params = $event;
             $event  = get_class($event);
         }
-
+        //根据事件标识解析出实际的事件
         if (isset($this->bind[$event])) {
             $event = $this->bind[$event];
         }
 
         $result    = [];
+        // 解析出事件的监听者（可多个）
         $listeners = $this->listener[$event] ?? [];
 
         foreach ($listeners as $key => $listener) {
+            // 这里才真正地触发事件（监听者去执行对应的操作）
             $result[$key] = $this->dispatch($listener, $params);
 
             if (false === $result[$key] || (!is_null($result[$key]) && $once)) {
