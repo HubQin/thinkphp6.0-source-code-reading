@@ -57,6 +57,7 @@ class Http
     public function __construct(App $app)
     {
         $this->app   = $app;
+        //多应用解析，通过判断「app」目录下有无「controller」目录，没有就是多应用模式
         $this->multi = is_dir($this->app->getBasePath() . 'controller') ? false : true;
     }
 
@@ -275,42 +276,56 @@ class Http
      */
     protected function parseMultiApp(): void
     {
+        // 虽然在「Http」的构造函数自动判断过是否开启多应用
+        // 最终还要看配置文件是否有配置
         if ($this->app->config->get('app.auto_multi_app', false)) {
             // 自动多应用识别
             $this->bindDomain = false;
-
+            // 获取域名绑定
             $bind = $this->app->config->get('app.domain_bind', []);
-
+            // 如果有域名绑定
             if (!empty($bind)) {
                 // 获取当前子域名
                 $subDomain = $this->app->request->subDomain();
                 $domain    = $this->app->request->host(true);
 
+                //完整域名绑定
                 if (isset($bind[$domain])) {
                     $appName          = $bind[$domain];
                     $this->bindDomain = true;
+                    //子域名绑定
                 } elseif (isset($bind[$subDomain])) {
                     $appName          = $bind[$subDomain];
                     $this->bindDomain = true;
+                    //二级泛域名绑定
                 } elseif (isset($bind['*'])) {
                     $appName          = $bind['*'];
                     $this->bindDomain = true;
                 }
             }
-
+            //如果没有域名绑定
             if (!$this->bindDomain) {
+                //获取别名映射
                 $map  = $this->app->config->get('app.app_map', []);
+                //获取禁止URL访问目录
                 $deny = $this->app->config->get('app.deny_app_list', []);
+                //获取当前请求URL的pathinfo信息（含URL后缀）
+                // 比如 index/index/index
                 $path = $this->app->request->pathinfo();
+                // 比如，从index/index/index获取得index
                 $name = current(explode('/', $path));
-
+                //解析别名映射
                 if (isset($map[$name])) {
+                    //如果这个别名映射到的是一个闭包
+                    //这样不知有啥用
                     if ($map[$name] instanceof Closure) {
                         $result  = call_user_func_array($map[$name], [$this]);
                         $appName = $result ?: $name;
+                        //直接取得应用名
                     } else {
                         $appName = $map[$name];
                     }
+                    //$name不为空且$name在$map数组中作为KEY，或者$name是禁止URL方位的目录
                 } elseif ($name && (false !== array_search($name, $map) || in_array($name, $deny))) {
                     throw new HttpException(404, 'app not exists:' . $name);
                 } elseif ($name && isset($map['*'])) {
@@ -338,8 +353,10 @@ class Http
      */
     protected function loadApp(string $appName): void
     {
+        //设置当前应用名，$this->app的值
         $this->name = $appName;
         $this->app->request->setApp($appName);
+        //设置应用目录
         $this->app->setAppPath($this->path ?: $this->app->getBasePath() . $appName . DIRECTORY_SEPARATOR);
         $this->app->setRuntimePath($this->app->getRootPath() . 'runtime' . DIRECTORY_SEPARATOR . $appName . DIRECTORY_SEPARATOR);
 

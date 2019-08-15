@@ -45,6 +45,7 @@ class Middleware
         $this->config = array_merge($this->config, $config);
     }
 
+    // Middleware实例化之前，「__make」方法会最先被执行
     public static function __make(App $app, Config $config)
     {
         return (new static($config->get('middleware')))->setApp($app);
@@ -90,6 +91,7 @@ class Middleware
      */
     public function add($middleware, string $type = 'route'): void
     {
+        //如果没有传入中间件，直接返回
         if (is_null($middleware)) {
             return;
         }
@@ -161,27 +163,35 @@ class Middleware
      */
     protected function buildMiddleware($middleware, string $type = 'route'): array
     {
+        // 是否是数组
         if (is_array($middleware)) {
+            // 列出中间件及其参数
+            // 这里说明我们可以给中间件传入参数，且形式为 [中间件, 参数]
             list($middleware, $param) = $middleware;
         }
-
+        // 是否是一个闭包
+        // 说明中间件可以是一个闭包
         if ($middleware instanceof \Closure) {
+            //返回闭包和参数
             return [$middleware, $param ?? null];
         }
-
+        // 排除了上面几种类型，且不是字符串，抛出错误
         if (!is_string($middleware)) {
             throw new InvalidArgumentException('The middleware is invalid');
         }
 
+        //检查「$config」成员变量中是否有别名，有则解析出来
         if (isset($this->config[$middleware])) {
             $middleware = $this->config[$middleware];
         }
 
+        //如果中间件有包含中间件（说明中间件可以嵌套）
+        //再走一遍「import」递归解析
         if (is_array($middleware)) {
             $this->import($middleware, $type);
             return [];
         }
-
+        //返回解析结果
         return [[$middleware, 'handle'], $param ?? null];
     }
 
