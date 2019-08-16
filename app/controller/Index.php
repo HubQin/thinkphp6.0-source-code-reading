@@ -14,4 +14,5 @@ class Index extends BaseController
     {
         return 'hello,' . $name;
     }
+
 }

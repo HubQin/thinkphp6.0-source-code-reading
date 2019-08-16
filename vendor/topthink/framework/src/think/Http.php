@@ -189,11 +189,13 @@ class Http
 
         // 监听HttpRun
         $this->app->event->trigger('HttpRun');
-
+        // 是否开启路由
+        // 开启的话将一个闭包赋值给$withRoute变量
         $withRoute = $this->app->config->get('app.with_route', true) ? function () {
+            //加载路由文件
             $this->loadRoutes();
         } : null;
-
+        // 路由调度
         return $this->app->route->dispatch($request, $withRoute);
     }
 

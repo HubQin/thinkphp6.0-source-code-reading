@@ -166,12 +166,15 @@ class Route
 
     protected function init()
     {
+        //加载配置文件的路由配置
         $this->config = array_merge($this->config, $this->app->config->get('route'));
-
+        //设置是否延迟解析
         $this->lazy($this->config['url_lazy_route']);
+        //是否合并路由规则
         $this->mergeRuleRegex = $this->config['route_rule_merge'];
-
+        //如果开启了路由缓存
         if ($this->config['route_check_cache']) {
+            //设置缓存驱动，没有传入值，则用默认驱动
             $this->cache = $this->app->cache->store(true === $this->config['route_check_cache'] ? '' : $this->config['route_check_cache']);
         }
 
@@ -724,15 +727,18 @@ class Route
     {
         $this->request = $request;
         $this->host    = $this->request->host(true);
+        //加载路由配置、缓存等
         $this->init();
 
         if ($withRoute) {
+            //保存一个闭包
             $checkCallback = function () use ($request, $withRoute) {
                 //加载路由
+                //执行闭包，该闭包将会加载路由文件
                 $withRoute();
                 return $this->check();
             };
-
+            //如果开启了路由缓存
             if ($this->config['route_check_cache']) {
                 $dispatch = $this->cache
                     ->tag('route_cache')
@@ -741,6 +747,7 @@ class Route
                 $dispatch = $checkCallback();
             }
         } else {
+            //如果没有开启路由
             $dispatch = $this->url($this->path());
         }
 
