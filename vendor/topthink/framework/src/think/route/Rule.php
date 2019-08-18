@@ -782,11 +782,13 @@ abstract class Rule
     public function parseUrlPath(string $url): array
     {
         // 分隔符替换 确保路由定义使用统一的分隔符
+        // 比如 demo/hello
         $url = str_replace('|', '/', $url);
         $url = trim($url, '/');
 
         if (strpos($url, '/')) {
             // [控制器/操作]
+            // 比如 ["demo","hello"]
             $path = explode('/', $url);
         } else {
             $path = [$url];

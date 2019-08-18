@@ -41,7 +41,10 @@ class Url extends Controller
      */
     protected function parseUrl(string $url): array
     {
+        // 获取URL分隔符
         $depr = $this->rule->config('pathinfo_depr');
+        // $this->rule->getRouter() 获取路由对象
+        // 获取路由绑定
         $bind = $this->rule->getRouter()->getDomainBind();
 
         if ($bind && preg_match('/^[a-z]/is', $bind)) {
@@ -49,15 +52,17 @@ class Url extends Controller
             // 如果有模块/控制器绑定
             $url = $bind . ('.' != substr($bind, -1) ? $depr : '') . ltrim($url, $depr);
         }
-
+        // $path为[控制器，操作]这样组成的数组，如["demo", "hello"]
         $path = $this->rule->parseUrlPath($url);
         if (empty($path)) {
             return [null, null];
         }
 
         // 解析控制器
+        // 获取控制器名
         $controller = !empty($path) ? array_shift($path) : null;
-
+        // 检查控制器是否合法
+        // 正则匹配：开头是字母，后面是0个到多个字母、下划线或者点
         if ($controller && !preg_match('/^[A-Za-z][\w|\.]*$/', $controller)) {
             throw new HttpException(404, 'controller not exists:' . $controller);
         }
@@ -68,6 +73,7 @@ class Url extends Controller
 
         // 解析额外参数
         if ($path) {
+            // 正则匹配：一个至多个字母，下划线，中间是‘|’，结尾是非‘|’的任意字符，比如 hello|123
             preg_replace_callback('/(\w+)\|([^\|]+)/', function ($match) use (&$var) {
                 $var[$match[1]] = strip_tags($match[2]);
             }, implode('|', $path));
@@ -84,7 +90,7 @@ class Url extends Controller
 
         // 封装路由
         $route = [$controller, $action];
-
+        // 如果路由被定义过
         if ($this->hasDefinedRoute($route)) {
             throw new HttpException(404, 'invalid request:' . str_replace('|', $depr, $url));
         }

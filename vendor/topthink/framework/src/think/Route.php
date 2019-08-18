@@ -390,7 +390,10 @@ class Route
      */
     public function getDomainBind(string $domain = null)
     {
+        // 如果没有传入参数
         if (is_null($domain)) {
+            // 使用当前请求的域名
+            // 比如www.tp6.com
             $domain = $this->host;
         } elseif (false === strpos($domain, '.')) {
             $domain .= '.' . $this->request->rootDomain();
@@ -747,12 +750,17 @@ class Route
                 $dispatch = $checkCallback();
             }
         } else {
-            //如果没有开启路由
+            //如果没有开启路由，将执行这里的语句
+            //$this->path()得到PATHINFO，比如/demo/hello
             $dispatch = $this->url($this->path());
         }
-
+        // $dispatch是think\route\dispatch\Url的实例，该类继承了Controller类
+        // 且该类中没有init方法，所以这里执行的是其父类的init方法
+        // init方法主要解析出了控制器名和操作名
         $dispatch->init($this->app);
-
+        // 将一个闭包注册为中间件
+        // 该闭包调用了think\route\dispatch\Url类的run方法，返回一个response
+        // 实际上run方法位于其祖先类
         $this->app->middleware->add(function () use ($dispatch) {
             try {
                 $response = $dispatch->run();
@@ -819,17 +827,20 @@ class Route
      */
     protected function path(): string
     {
+        //获取伪静态后缀
         $suffix   = $this->config['url_html_suffix'];
         $pathinfo = $this->request->pathinfo();
 
+        // 如果是禁止伪静态访问
         if (false === $suffix) {
-            // 禁止伪静态访问
             $path = $pathinfo;
+            //如果是开启了伪静态
         } elseif ($suffix) {
             // 去除正常的URL后缀
             $path = preg_replace('/\.(' . ltrim($suffix, '.') . ')$/i', '', $pathinfo);
         } else {
             // 允许任何后缀访问
+            // 去除后缀
             $path = preg_replace('/\.' . $this->request->ext() . '$/i', '', $pathinfo);
         }
 
@@ -844,6 +855,7 @@ class Route
      */
     public function url(string $url): UrlDispatch
     {
+        // 第三个参数为PATHINFO
         return new UrlDispatch($this->request, $this->group, $url);
     }
 

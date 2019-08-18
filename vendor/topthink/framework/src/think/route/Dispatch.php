@@ -83,6 +83,7 @@ abstract class Dispatch
      */
     public function run(): Response
     {
+        // HTTP的OPTIONS方法用于获取目的资源所支持的通信选项。
         if ($this->rule instanceof RuleItem && $this->request->method() == 'OPTIONS' && $this->rule->isAutoOptions()) {
             $rules = $this->rule->getRouter()->getRule($this->rule->getRule());
             $allow = [];
@@ -93,27 +94,32 @@ abstract class Dispatch
             return Response::create('', '', 204)->header(['Allow' => implode(', ', $allow)]);
         }
 
+        //获取路由参数定义
         $option = $this->rule->getOption();
 
         // 数据自动验证
         if (isset($option['validate'])) {
             $this->autoValidate($option['validate']);
         }
-
+        //这里的exec方法位于Controller类
         $data = $this->exec();
-
+        // 控制器操作返回的数据，进一步加工，设置Http报头、状态码等，返回一个Response对象
         return $this->autoResponse($data);
     }
 
     protected function autoResponse($data): Response
     {
+        // 如果已经是Response对象，直接返回
         if ($data instanceof Response) {
             $response = $data;
+            //如果有数据
         } elseif (!is_null($data)) {
             // 默认自动识别响应输出类型
             $type     = $this->request->isJson() ? 'json' : 'html';
+            // 创建对应类型的响应
             $response = Response::create($data, $type);
         } else {
+            //获取缓冲区中的数据并删除缓冲区数据
             $data = ob_get_clean();
 
             $content  = false === $data ? '' : $data;

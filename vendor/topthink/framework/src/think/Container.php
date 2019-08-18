@@ -298,7 +298,10 @@ class Container implements ContainerInterface, ArrayAccess, IteratorAggregate, C
             $args = $this->bindParams($reflect, $vars);
 
             if ($reflect->isClosure()) {
-                // 解决在`php7.1`调用时会产生`$this`上下文不存在的错误 (https://bugs.php.net/bug.php?id=66430)
+                // 解决在`php7.1`调用时会产生`$this`上下文不存在的错误 (https://bugs.php.net/bug.php?id=66430)// 调用闭包
+                // __invole是魔术方法，当对象被作为函数调用时，会触发该方法
+                // 比如，$obj是一个对象的话，$obj()将触发__invoke方法
+                // 这里是在闭包上调用__invoke,将执行该闭包
                 return $function->__invoke(...$args);
             } else {
                 return $reflect->invokeArgs($args);
@@ -377,10 +380,11 @@ class Container implements ContainerInterface, ArrayAccess, IteratorAggregate, C
      */
     public function invoke($callable, array $vars = [], bool $accessible = false)
     {
+        // 如果$callable是闭包
         if ($callable instanceof Closure) {
             return $this->invokeFunction($callable, $vars);
         }
-
+        // $callable不是闭包的情况
         return $this->invokeMethod($callable, $vars, $accessible);
     }
 

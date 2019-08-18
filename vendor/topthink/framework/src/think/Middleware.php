@@ -151,6 +151,9 @@ class Middleware
      */
     public function dispatch(Request $request, string $type = 'route')
     {
+        //$this->resolve($type)是一个闭包
+        //这里执行一个闭包，传入的参数为一个Request对象
+        //这个闭包是一个多层嵌套的闭包
         return call_user_func($this->resolve($type), $request);
     }
 
@@ -198,24 +201,45 @@ class Middleware
     protected function resolve(string $type = 'route')
     {
         return function (Request $request) use ($type) {
+            // 从队列中第一个位置删除取出一个绑定的中间件
             $middleware = array_shift($this->queue[$type]);
-
+            // 已没有中间件，结束该方法
+            // 递归终止条件
             if (null === $middleware) {
                 throw new InvalidArgumentException('The queue was exhausted, with no response returned');
             }
-
+            // 获取中间件类及其处理函数、中间件参数
+            // 比如，$call 为：
+            //Array
+            //(
+            //    [0] => think\middleware\LoadLangPack
+            //    [1] => handle
+            //)
             list($call, $param) = $middleware;
 
             if (is_array($call) && is_string($call[0])) {
+                // 实例化
+                // 比如
+                // Array
+                //(
+                //    [0] => think\middleware\LoadLangPack Object
+                //        (
+                //        )
+                //
+                //    [1] => handle
+                //)
                 $call = [$this->app->make($call[0]), $call[1]];
             }
 
             try {
+                // 这里递归调用「resovle」
+                // $param是闭包传入的参数
                 $response = $this->app->invoke($call, [$request, $this->resolve($type), $param]);
             } catch (HttpResponseException $exception) {
                 $response = $exception->getResponse();
             }
 
+            // 中间件必须返回一个Response对象
             if (!$response instanceof Response) {
                 throw new LogicException('The middleware must return Response instance');
             }

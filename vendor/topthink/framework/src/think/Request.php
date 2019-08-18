@@ -404,8 +404,10 @@ class Request
         $root = $this->rootDomain;
 
         if (!$root) {
+            // 比如 ['www','tp6','com']
             $item  = explode('.', $this->host());
             $count = count($item);
+            // tp6.com
             $root  = $count > 1 ? $item[$count - 2] . '.' . $item[$count - 1] : $item[0];
         }
 
@@ -433,9 +435,11 @@ class Request
     {
         if (is_null($this->subDomain)) {
             // 获取当前主域名
+            // 比如 tp6.com
             $rootDomain = $this->rootDomain();
 
             if ($rootDomain) {
+                // 获取子域名，比如 www
                 $this->subDomain = rtrim(stristr($this->host(), $rootDomain, true), '.');
             } else {
                 $this->subDomain = '';
@@ -630,18 +634,23 @@ class Request
     public function pathinfo(): string
     {
         if (is_null($this->pathinfo)) {
+            // 判断 $_GET['s']
             if (isset($_GET[$this->varPathinfo])) {
-                // 判断URL里面是否有兼容模式参数
+                // 判断URL里面是否有兼容模式参数,$varPathinfo默认为's'
                 $pathinfo = $_GET[$this->varPathinfo];
                 unset($_GET[$this->varPathinfo]);
                 unset($this->get[$this->varPathinfo]);
             } elseif ($this->server('PATH_INFO')) {
+                // 从$_SERVER获取PATH_INFO的值
+                // 这里建议在判断条件中把值给保存起来
+                // 这样就不用再走一遍「server」方法
                 $pathinfo = $this->server('PATH_INFO');
+                // 如果是使用PHP内置的服务器
             } elseif ('cli-server' == PHP_SAPI) {
                 $pathinfo = strpos($this->server('REQUEST_URI'), '?') ? strstr($this->server('REQUEST_URI'), '?', true) : $this->server('REQUEST_URI');
             }
 
-            // 分析PATHINFO信息
+            // 如果$pathinfo没有设置
             if (!isset($pathinfo)) {
                 foreach ($this->pathinfoFetch as $type) {
                     if ($this->server($type)) {
@@ -658,7 +667,8 @@ class Request
 
             $this->pathinfo = empty($pathinfo) || '/' == $pathinfo ? '' : ltrim($pathinfo, '/');
         }
-
+        // 比如浏览器访问http://www.tp6.com/demo/hello
+        // 得到$pathinfo为/demo/hello
         return $this->pathinfo;
     }
 

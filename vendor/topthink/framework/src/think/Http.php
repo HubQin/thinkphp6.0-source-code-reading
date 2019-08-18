@@ -151,7 +151,7 @@ class Http
 
             $response = $this->renderException($request, $e);
         }
-
+        // 设置cookie并返回响应对象
         return $response->setCookie($this->app->cookie);
     }
 
