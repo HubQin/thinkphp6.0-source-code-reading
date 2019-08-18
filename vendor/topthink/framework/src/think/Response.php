@@ -145,7 +145,7 @@ class Response
     {
         // 处理输出数据
         $data = $this->getContent();
-
+        // 如果还沒有发送响应头且$this->header不为空
         if (!headers_sent() && !empty($this->header)) {
             // 发送状态码
             http_response_code($this->code);
@@ -154,11 +154,11 @@ class Response
                 header($name . (!is_null($val) ? ':' . $val : ''));
             }
         }
-
+        // 保存cookie
         $this->cookie->save();
-
+        // 输出数据
         $this->sendData($data);
-
+        // 参考：http://www.laruence.com/2011/04/13/1991.html
         if (function_exists('fastcgi_finish_request')) {
             // 提高页面响应
             fastcgi_finish_request();
