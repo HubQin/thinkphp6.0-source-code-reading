@@ -419,6 +419,7 @@ class Http
         $this->app->session->save();
     }
 
+    // 规定var_dump()一个对象是输出什么
     public function __debugInfo()
     {
         return [
