@@ -178,14 +178,15 @@ class Event
         if (!$this->withEvent) {
             return $this;
         }
-
+        // 强制转换为数组
         $subscribers = (array) $subscriber;
 
         foreach ($subscribers as $subscriber) {
             if (is_string($subscriber)) {
+                //实例化事件订阅类
                 $subscriber = $this->app->make($subscriber);
             }
-
+            // 如果该事件订阅类存在'subscribe'方法，执行该方法
             if (method_exists($subscriber, 'subscribe')) {
                 // 手动订阅
                 $subscriber->subscribe($this);
@@ -210,16 +211,19 @@ class Event
             return $this;
         }
 
+        //如果是字符串，实例化对应的类
         if (is_string($observer)) {
             $observer = $this->app->make($observer);
         }
-
+        // 获取listen数组所有的KEY
         $events = array_keys($this->listener);
 
         foreach ($events as $event) {
+            // 如果存在「\」,获取「\」后面的字符
             $name   = false !== strpos($event, '\\') ? substr(strrchr($event, '\\'), 1) : $event;
+            //事件订阅类中的方法，命名规则是on+事件类名/事件标识
             $method = 'on' . $name;
-
+            // 如果方法存在，则添加到$listen数组，且入口方法为$method
             if (method_exists($observer, $method)) {
                 $this->listen($event, [$observer, $method]);
             }
@@ -238,6 +242,7 @@ class Event
      */
     public function trigger($event, $params = null, bool $once = false)
     {
+        //如果设置了关闭事件，则直接返回，不再执行任何监听器
         if (!$this->withEvent) {
             return;
         }
@@ -257,14 +262,16 @@ class Event
         $listeners = $this->listener[$event] ?? [];
 
         foreach ($listeners as $key => $listener) {
-            // 这里才真正地触发事件（监听者去执行对应的操作）
+            // 执行监听器的操作
+            // 这里使用反射类实例化监听器和执行监听器的操作，其过程类似前面的依赖注入的实现
             $result[$key] = $this->dispatch($listener, $params);
-
+            // 如果返回false，或者没有返回值且 $once 为 true，直接中断，不再执行后面的监听器
             if (false === $result[$key] || (!is_null($result[$key]) && $once)) {
                 break;
             }
         }
-
+        // 是否返回多个监听器的结果
+        // $once 为 false 则返回最后一个监听器的结果
         return $once ? end($result) : $result;
     }
 
@@ -277,8 +284,10 @@ class Event
      */
     protected function dispatch($event, $params = null)
     {
+        // 如果不是字符串，比如，一个闭包
         if (!is_string($event)) {
             $call = $event;
+            //一个类的静态方法
         } elseif (strpos($event, '::')) {
             $call = $event;
         } else {

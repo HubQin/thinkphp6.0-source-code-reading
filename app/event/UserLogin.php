@@ -2,6 +2,8 @@
 
 namespace app\event;
 
+use app\model\User;
+
 class UserLogin
 {
     public $user;

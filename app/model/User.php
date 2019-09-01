@@ -2,12 +2,7 @@
 
 namespace app\model;
 
-use think\Model;
-
-/**
- * @mixin think\Model
- */
-class User extends Model
+class User
 {
-    //
+    public $userName = '';
 }

@@ -15,11 +15,13 @@ return [
     ],
 
     'listen'    => [
-        'AppInit'  => [],
+        'AppInit'  => ['app\listener\ShowAppInit'],
         'HttpRun'  => [],
         'HttpEnd'  => [],
         'LogLevel' => [],
         'LogWrite' => [],
+        'UserLogin'    => [],
+        'UserLogout'   => [],
     ],
 
     'subscribe' => [
