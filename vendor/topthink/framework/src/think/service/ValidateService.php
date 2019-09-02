@@ -22,9 +22,13 @@ class ValidateService extends Service
 {
     public function boot()
     {
+        // 添加闭包到Validate::$maker
         Validate::maker(function (Validate $validate) {
+            // 设置当前语言
             $validate->setLang($this->app->lang);
+            // 设置数据库连接
             $validate->setDb($this->app->db);
+            // 设置当前请求对象
             $validate->setRequest($this->app->request);
         });
     }

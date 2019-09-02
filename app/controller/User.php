@@ -2,7 +2,9 @@
 
 namespace app\controller;
 
+use app\common\MyServiceDemo;
 use think\facade\Event;
+use app\model\User as UserModel;
 
 class User
 {
@@ -18,5 +20,13 @@ class User
     public function logout(){
         echo "用户退出了<br>   ";
         Event::trigger('UserLogout');
+    }
+
+    public function modelDb(){
+        (new \app\model\User())->getDb();
+    }
+
+    public function testService(MyServiceDemo $demo){
+        $demo->showVar();
     }
 }

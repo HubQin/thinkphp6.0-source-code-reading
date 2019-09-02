@@ -32,18 +32,19 @@ class Facade
      */
     protected static function createFacade(string $class = '', array $args = [], bool $newInstance = false)
     {
+        // 如果$class为空，那么$class就等于当前的类（think\facade\Event）
         $class = $class ?: static::class;
-
+        // 解析出该Facade类实际要代理的类
         $facadeClass = static::getFacadeClass();
 
         if ($facadeClass) {
             $class = $facadeClass;
         }
-
+        // 是否要一直新建实例（否则就是单例模式）
         if (static::$alwaysNewInstance) {
             $newInstance = true;
         }
-
+        // 使用PHP的反射类实例化该类（比如，实例化think\Event）
         return Container::getInstance()->make($class, $args, $newInstance);
     }
 

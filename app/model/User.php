@@ -2,7 +2,11 @@
 
 namespace app\model;
 
-class User
+use think\Model;
+
+class User extends Model
 {
-    public $userName = '';
+    public function getDb(){
+        var_dump(self::$db);
+    }
 }

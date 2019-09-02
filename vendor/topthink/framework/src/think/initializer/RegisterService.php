@@ -31,14 +31,16 @@ class RegisterService
 
     public function init(App $app)
     {
+        // 加载扩展包的服务
         $file = $app->getRootPath() . 'vendor/services.php';
 
         $services = $this->services;
 
+        //合并，得到所有需要注册的服务
         if (is_file($file)) {
             $services = array_merge($services, include $file);
         }
-
+        // 逐个注册服务
         foreach ($services as $service) {
             if (class_exists($service)) {
                 $app->register($service);

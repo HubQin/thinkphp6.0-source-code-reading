@@ -184,24 +184,30 @@ class App extends Container
      */
     public function register($service, bool $force = false)
     {
+        // 比如 think\service\PaginatorService
+        // getService方法判断服务的实例是否存在于App::$services成员变量中
+        // 如果是则直接返回该实例
         $registered = $this->getService($service);
-
+        // 如果服务已注册且不强制重新注册，直接返回服务实例
         if ($registered && !$force) {
             return $registered;
         }
-
+        // 实例化该服务
+        // 比如 think\service\PaginatorService，
+        // 该类没有构造函数，其父类Service类有构造函数，需要传入一个App类的实例
+        // 所以这里传入$this（App类的实例）进行实例化
         if (is_string($service)) {
             $service = new $service($this);
         }
-
+        // 如果存在「register」方法，则调用之
         if (method_exists($service, 'register')) {
             $service->register();
         }
-
+        // 如果存在「bind」属性，添加容器标识绑定
         if (property_exists($service, 'bind')) {
             $this->bind($service->bind);
         }
-
+        // 保存服务实例
         $this->services[] = $service;
     }
 
@@ -488,6 +494,8 @@ class App extends Container
      */
     public function boot(): void
     {
+        // 对每个服务实例执行闭包中的代码
+        // 这里是将每个服务实例传入bootService方法中
         array_walk($this->services, function ($service) {
             $this->bootService($service);
         });
