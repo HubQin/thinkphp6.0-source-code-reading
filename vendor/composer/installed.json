@@ -722,6 +722,60 @@
         ]
     },
     {
+        "name": "topthink/think-captcha",
+        "version": "v3.0.1",
+        "version_normalized": "3.0.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/top-think/think-captcha.git",
+            "reference": "9fc0c627d773f6a54a8dd142ebf358f746557a48"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/top-think/think-captcha/zipball/9fc0c627d773f6a54a8dd142ebf358f746557a48",
+            "reference": "9fc0c627d773f6a54a8dd142ebf358f746557a48",
+            "shasum": "",
+            "mirrors": [
+                {
+                    "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                    "preferred": true
+                }
+            ]
+        },
+        "require": {
+            "topthink/framework": "^6.0.0"
+        },
+        "time": "2019-06-06T07:16:01+00:00",
+        "type": "library",
+        "extra": {
+            "think": {
+                "services": [
+                    "think\\captcha\\CaptchaService"
+                ]
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "think\\captcha\\": "src/"
+            },
+            "files": [
+                "src/helper.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "Apache-2.0"
+        ],
+        "authors": [
+            {
+                "name": "yunwuxin",
+                "email": "448901948@qq.com"
+            }
+        ],
+        "description": "captcha package for thinkphp"
+    },
+    {
         "name": "topthink/think-helper",
         "version": "v3.1.2",
         "version_normalized": "3.1.2.0",

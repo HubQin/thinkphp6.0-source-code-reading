@@ -18,6 +18,8 @@ class MyServiceDemo
     }
 
     public function showVar(){
+        // 因为在服务提供类app\service\MyService的boot方法中设置了$myStaticVar=‘456’
+        // 所以这里输出‘456’
         var_dump(self::$myStaticVar);
     }
 }

@@ -10,7 +10,7 @@ class MyService  extends Service
 
     public function register()
     {
-    	
+        $this->app->bind('my_service', MyServiceDemo::class);
     }
 
     public function boot()

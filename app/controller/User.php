@@ -2,9 +2,7 @@
 
 namespace app\controller;
 
-use app\common\MyServiceDemo;
 use think\facade\Event;
-use app\model\User as UserModel;
 
 class User
 {
@@ -22,11 +20,10 @@ class User
         Event::trigger('UserLogout');
     }
 
-    public function modelDb(){
-        (new \app\model\User())->getDb();
-    }
-
-    public function testService(MyServiceDemo $demo){
-        $demo->showVar();
+    public function test(){
+        $data = \app\model\User::where('id', 1)->select();
+        foreach ($data as $item) {
+            var_dump($item['ne']);
+        }
     }
 }
